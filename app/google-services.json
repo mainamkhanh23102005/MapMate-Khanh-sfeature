@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522613846463",
+    "project_id": "zenly-demo",
+    "storage_bucket": "zenly-demo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522613846463:android:3e2398e04783812e38f10a",
+        "android_client_info": {
+          "package_name": "com.mapmate.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDF2_hbtewhVHtiqpidGQMoweHnbjKdFDI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

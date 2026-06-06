@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option java_package = "com.mapmate.app.telemetry";
+option java_multiple_files = true;
+
+message TelemetryRecord {
+  string user_id             = 1;
+  double latitude            = 2;
+  double longitude           = 3;
+  float  bearing             = 4;
+  float  speed_mps           = 5;
+  MotionStatus  motion_status   = 6;
+  TransportMode transport_mode  = 7;
+  uint32 battery_percentage     = 8;
+  bool   is_charging            = 9;
+  BatteryLevel battery_level    = 10;
+  int64  timestamp_ms           = 11;
+  uint32 schema_version         = 12;
+}
+
+enum MotionStatus {
+  MOTION_UNKNOWN = 0;
+  STILL          = 1;
+  WALKING        = 2;
+  MOVING         = 3;
+}
+
+enum TransportMode {
+  MODE_UNKNOWN = 0;
+  WALK         = 1;
+  BIKE         = 2;
+  CAR          = 3;
+  SHIP         = 4;
+}
+
+enum BatteryLevel {
+  BATTERY_UNKNOWN = 0;
+  CHARGING        = 1;
+  FULL            = 2;
+  LOW             = 3;
+  NORMAL          = 4;
+}
