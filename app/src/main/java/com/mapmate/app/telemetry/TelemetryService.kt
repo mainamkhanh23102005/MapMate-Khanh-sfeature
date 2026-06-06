@@ -22,8 +22,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -49,7 +47,6 @@ class TelemetryService : Service() {
     }
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private val db = FirebaseFirestore.getInstance()
 
     // Pipeline components
     private val speedSmoother       = SpeedSmoother(windowSize = 5)
@@ -140,7 +137,7 @@ class TelemetryService : Service() {
 
                 val now = System.currentTimeMillis()
                 if (now - lastStaleWriteMs >= STALE_WRITE_INTERVAL) {
-                    writeStaleLocation(silentMs)
+                    RealtimeDbWriter.writeStale(currentUserId, lastKnownLat, lastKnownLng, lastKnownBearing, silentMs)
                     lastStaleWriteMs = now
                 }
             }
@@ -151,42 +148,10 @@ class TelemetryService : Service() {
                     gpsAvailable = false
                 }
                 Log.e(TAG, "❌ GPS offline > 5min — writing offline status")
-                writeOfflineStatus()
+                RealtimeDbWriter.writeOffline(currentUserId)
                 showNotification("MapMate — location unavailable", "GPS offline for ${silentMs / 60_000}+ min")
             }
         }
-    }
-
-    private fun writeStaleLocation(silentMs: Long) {
-        if (lastKnownLat == 0.0 && lastKnownLng == 0.0) return
-
-        val data = mapOf(
-            "latitude"        to lastKnownLat,
-            "longitude"       to lastKnownLng,
-            "bearing"         to lastKnownBearing,
-            "location_stale"  to true,
-            "stale_since_ms"  to silentMs,
-            "gps_available"   to false,
-            "updated_at"      to FieldValue.serverTimestamp()
-        )
-
-        db.collection("locations").document(currentUserId)
-            .update(data)
-            .addOnSuccessListener {
-                Log.d(TAG, "📍 Stale location written (silent ${silentMs / 1000}s)")
-            }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Failed to write stale location", e)
-            }
-    }
-
-    private fun writeOfflineStatus() {
-        val data = mapOf(
-            "gps_available"  to false,
-            "location_stale" to true,
-            "updated_at"     to FieldValue.serverTimestamp()
-        )
-        db.collection("locations").document(currentUserId).update(data)
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -294,11 +259,11 @@ class TelemetryService : Service() {
                 batteryStatus = battery
             )
 
-            // ── Part 6: Write to Firestore ──
+            // ── Part 6: Write to Realtime Database ──
             if (protoBytes != null) {
                 val record = TelemetrySerializer.decode(protoBytes)
                 if (record != null) {
-                    FirestoreWriter.write(record, protoBytes)
+                    RealtimeDbWriter.write(record, protoBytes)
                 }
             }
 
